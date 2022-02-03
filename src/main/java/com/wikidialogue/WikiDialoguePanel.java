@@ -53,7 +53,7 @@ public class WikiDialoguePanel extends PluginPanel {
         String username = client.getLocalPlayer().getName();
         dialogue = dialogue.replaceAll(username, plugin.getConfig().usernameToken());
         if (plugin.getConfig().newline()) {
-            dialogue.replaceAll("<br>", "\n");
+            dialogue = dialogue.replace("<br>", "\n");
         }
         return dialogue;
     }
