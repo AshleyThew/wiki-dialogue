@@ -37,7 +37,7 @@ public class WikiDialoguePlugin extends Plugin {
 
     @Override
     protected void startUp() throws Exception {
-        log.info("Wiki Dialogue started!");
+
 
         final BufferedImage icon = ImageUtil.getResourceStreamFromClass(getClass(), "normal.png");
 
@@ -49,6 +49,8 @@ public class WikiDialoguePlugin extends Plugin {
 
         clientToolbar.addNavigation(navButton);
         eventBus.register(wikiDialoguePanel);
+        WikiDialogueDialogueServer.getInstance().start();
+        log.info("Wiki Dialogue started!");
     }
 
     @Override
@@ -71,4 +73,5 @@ public class WikiDialoguePlugin extends Plugin {
     WikiDialogueConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(WikiDialogueConfig.class);
     }
+
 }

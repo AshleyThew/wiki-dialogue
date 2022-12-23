@@ -1,9 +1,12 @@
 package com.wikidialogue;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetID;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.ui.ColorScheme;
@@ -18,6 +21,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class WikiDialoguePanel extends PluginPanel {
@@ -25,16 +30,21 @@ public class WikiDialoguePanel extends PluginPanel {
     private final WidgetInfo[] widgetInfos;
     private final JPanel overallPanel = new JPanel();
     private final JLabel uiLabel = new JLabel("Open a dialogue box.");
+    private final JLabel serverLabel = new JLabel("Open the dialogue editor.");
     private final Client client;
     private final WikiDialoguePlugin plugin;
     private JButton[] buttons = new JButton[0];
     private Widget lastWidget;
+    private String lastText = "";
+
+    private WikiDialogueDialogueServer server;
 
     @Inject
     public WikiDialoguePanel(Client client, WikiDialoguePlugin plugin) {
         super();
         this.client = client;
         this.plugin = plugin;
+        this.server = WikiDialogueDialogueServer.getInstance();
         this.widgetInfos = new WidgetInfo[]{WidgetInfo.DIALOG_NPC_TEXT, WidgetInfo.DIALOG_PLAYER_TEXT, WidgetInfo.DIALOG_OPTION_OPTIONS, WidgetInfo.DIALOG_SPRITE_TEXT};
 
         setBorder(new EmptyBorder(6, 6, 6, 6));
@@ -42,10 +52,12 @@ public class WikiDialoguePanel extends PluginPanel {
 
         setLayout(new GridLayout(10, 1));
 
+        serverLabel.setForeground(Color.WHITE);
         uiLabel.setForeground(Color.WHITE);
         setVisible(true);
 
 
+        add(serverLabel);
         add(uiLabel);
     }
 
@@ -67,18 +79,28 @@ public class WikiDialoguePanel extends PluginPanel {
         }
     }
 
-    private void setupCopyNormal(Widget widget) {
+    private void setupCopyNormal(Widget widget, WidgetInfo widgetInfo) {
         removeButtons();
         remove(uiLabel);
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
+                    String title = "";
+                    switch (widgetInfo){
+                        case DIALOG_PLAYER_TEXT:
+                            title = "<player>";
+                            break;
+                        case DIALOG_NPC_TEXT:
+                            title = client.getWidget(WidgetInfo.DIALOG_NPC_NAME).getText();
+                            break;
+                    }
+
                     JButton copy = new JButton("Copy Dialogue");
+                    String dialogue = replace(widget.getText());
                     copy.addMouseListener(new MouseAdapter() {
                         @Override
                         public void mousePressed(MouseEvent mouseEvent) {
-                            String myString = replace(widget.getText());
-                            StringSelection stringSelection = new StringSelection(myString);
+                            StringSelection stringSelection = new StringSelection(dialogue);
                             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                             clipboard.setContents(stringSelection, null);
                         }
@@ -86,6 +108,11 @@ public class WikiDialoguePanel extends PluginPanel {
                     add(copy);
                     buttons = new JButton[]{copy};
                     refresh();
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("type", "dialogue");
+                    jsonObject.addProperty("title", title);
+                    jsonObject.addProperty("dialogue", dialogue);
+                    server.send(jsonObject);
                 }
             });
         } catch (InterruptedException e) {
@@ -109,6 +136,7 @@ public class WikiDialoguePanel extends PluginPanel {
                     Widget[] dialogueOptions = option.getChildren();
                     String[] optionsText = new String[dialogueOptions.length];
                     buttons = new JButton[dialogueOptions.length];
+                    JsonArray jsonArray = new JsonArray();
                     for (int i = 0; i < dialogueOptions.length; i++) {
                         String option = replace(dialogueOptions[i].getText());
                         String info = i == 0 ? "Title" : "Option " + i;
@@ -123,10 +151,18 @@ public class WikiDialoguePanel extends PluginPanel {
                         });
                         if (option.length() > 0) {
                             add(copy);
+                            if(i != 0){
+                                jsonArray.add(option);
+                            }
                         }
                         buttons[i] = copy;
                     }
                     refresh();
+                    JsonObject jsonObject = new JsonObject();
+
+                    jsonObject.addProperty("type", "option");
+                    jsonObject.add("options", jsonArray);
+                    server.send(jsonObject);
                 }
             });
         } catch (InterruptedException e) {
@@ -146,27 +182,44 @@ public class WikiDialoguePanel extends PluginPanel {
 
     @Subscribe
     public void onGameTick(GameTick tick) {
-        //chatField.setText("" + (i++));
+        if(server.getConnections().size() > 0){
+            serverLabel.setText("Dialogue editors connected: " + server.getConnections().size());
+        }else{
+            serverLabel.setText("Open the dialogue editor.");
+        }
+
         Widget currentWidget = null;
         WidgetInfo currentWidgetInfo = null;
+        String currentText = null;
 
         for (WidgetInfo widgetInfo : widgetInfos) {
             currentWidget = client.getWidget(widgetInfo);
             if (currentWidget != null) {
                 currentWidgetInfo = widgetInfo;
+                switch (currentWidgetInfo) {
+                    case DIALOG_NPC_TEXT:
+                    case DIALOG_PLAYER_TEXT:
+                    case DIALOG_SPRITE_TEXT:
+                        currentText = currentWidget.getText();
+                        break;
+                    case DIALOG_OPTION_OPTIONS:
+                        currentText = Arrays.stream(currentWidget.getChildren()).map(Widget::getText).collect(Collectors.joining("\n"));
+                        break;
+                }
                 break;
             }
         }
         if (currentWidget != null) {
-            if (currentWidget != lastWidget) {
+            if (currentWidget != lastWidget || !lastText.equals(currentText)) {
                 lastWidget = currentWidget;
+                lastText = currentText;
                 Widget finalCurrentWidget = currentWidget;
                 switch (currentWidgetInfo) {
                     case DIALOG_NPC_TEXT:
                     case DIALOG_PLAYER_TEXT:
                     case DIALOG_SPRITE_TEXT:
 
-                        setupCopyNormal(finalCurrentWidget);
+                        setupCopyNormal(finalCurrentWidget, currentWidgetInfo);
                         break;
                     case DIALOG_OPTION_OPTIONS:
                         setupCopyOption(finalCurrentWidget);
