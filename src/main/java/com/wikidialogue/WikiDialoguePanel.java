@@ -9,10 +9,12 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetID;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.input.KeyManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -25,6 +27,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Singleton
 public class WikiDialoguePanel extends PluginPanel {
 
     private final WidgetInfo[] widgetInfos;
@@ -36,6 +39,8 @@ public class WikiDialoguePanel extends PluginPanel {
     private JButton[] buttons = new JButton[0];
     private Widget lastWidget;
     private String lastText = "";
+    private boolean shiftPressed;
+    private boolean ctrlPressed;
 
     private WikiDialogueDialogueServer server;
 
@@ -108,11 +113,14 @@ public class WikiDialoguePanel extends PluginPanel {
                     add(copy);
                     buttons = new JButton[]{copy};
                     refresh();
-                    JsonObject jsonObject = new JsonObject();
-                    jsonObject.addProperty("type", "dialogue");
-                    jsonObject.addProperty("title", title);
-                    jsonObject.addProperty("dialogue", dialogue);
-                    server.send(jsonObject);
+                    if(!shiftPressed) {
+                        JsonObject jsonObject = new JsonObject();
+                        jsonObject.addProperty("type", "dialogue");
+                        jsonObject.addProperty("title", title);
+                        jsonObject.addProperty("dialogue", dialogue);
+                        jsonObject.addProperty("link", ctrlPressed);
+                        server.send(jsonObject);
+                    }
                 }
             });
         } catch (InterruptedException e) {
@@ -159,10 +167,12 @@ public class WikiDialoguePanel extends PluginPanel {
                     }
                     refresh();
                     JsonObject jsonObject = new JsonObject();
-
-                    jsonObject.addProperty("type", "option");
-                    jsonObject.add("options", jsonArray);
-                    server.send(jsonObject);
+                    if(!shiftPressed) {
+                        jsonObject.addProperty("type", "option");
+                        jsonObject.add("options", jsonArray);
+                        jsonObject.addProperty("link", ctrlPressed);
+                        server.send(jsonObject);
+                    }
                 }
             });
         } catch (InterruptedException e) {
@@ -231,5 +241,13 @@ public class WikiDialoguePanel extends PluginPanel {
             add(uiLabel);
             refresh();
         }
+    }
+
+    public void setCtrlPressed(boolean ctrlPressed) {
+        this.ctrlPressed = ctrlPressed;
+    }
+
+    public void setShiftPressed(boolean shiftPressed) {
+        this.shiftPressed = shiftPressed;
     }
 }

@@ -4,7 +4,10 @@ import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.config.Keybind;
 import net.runelite.client.eventbus.EventBus;
+import net.runelite.client.input.KeyListener;
+import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -13,6 +16,7 @@ import net.runelite.client.util.ImageUtil;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
 @Slf4j
@@ -33,6 +37,9 @@ public class WikiDialoguePlugin extends Plugin {
     @Inject
     private WikiDialoguePanel wikiDialoguePanel;
 
+    @Inject
+    private KeyManager keyManager;
+
     private NavigationButton navButton;
 
     @Override
@@ -50,6 +57,7 @@ public class WikiDialoguePlugin extends Plugin {
         clientToolbar.addNavigation(navButton);
         eventBus.register(wikiDialoguePanel);
         WikiDialogueDialogueServer.getInstance().start();
+        keyManager.registerKeyListener(shiftListener);
         log.info("Wiki Dialogue started!");
     }
 
@@ -57,6 +65,7 @@ public class WikiDialoguePlugin extends Plugin {
     protected void shutDown() throws Exception {
         clientToolbar.removeNavigation(navButton);
         eventBus.unregister(wikiDialoguePanel);
+        keyManager.unregisterKeyListener(shiftListener);
         //overlayManager.remove(wikiDialogueOverlay);
         log.info("Wiki Dialogue stopped!");
     }
@@ -73,5 +82,31 @@ public class WikiDialoguePlugin extends Plugin {
     WikiDialogueConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(WikiDialogueConfig.class);
     }
+
+    private final KeyListener shiftListener = new KeyListener() {
+        @Override
+        public void keyTyped(KeyEvent e) {
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getExtendedKeyCode() == KeyEvent.VK_SHIFT) {
+                wikiDialoguePanel.setShiftPressed(true);
+            }
+            if (e.getExtendedKeyCode() == KeyEvent.VK_CONTROL) {
+                wikiDialoguePanel.setCtrlPressed(true);
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            if (e.getExtendedKeyCode() == KeyEvent.VK_SHIFT) {
+                wikiDialoguePanel.setShiftPressed(false);
+            }
+            if (e.getExtendedKeyCode() == KeyEvent.VK_CONTROL) {
+                wikiDialoguePanel.setCtrlPressed(false);
+            }
+        }
+    };
 
 }
