@@ -1,6 +1,5 @@
 plugins {
 	id 'java'
-	id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 repositories {
@@ -25,12 +24,6 @@ dependencies {
 	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
 }
-
-shadowJar {
-	archiveClassifier.set('')
-}
-
-tasks.build.dependsOn tasks.shadowJar
 
 group = 'com.wikidialogue'
 version = '1.0-SNAPSHOT'
