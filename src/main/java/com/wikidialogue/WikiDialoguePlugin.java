@@ -66,7 +66,7 @@ public class WikiDialoguePlugin extends Plugin {
         clientToolbar.removeNavigation(navButton);
         eventBus.unregister(wikiDialoguePanel);
         keyManager.unregisterKeyListener(shiftListener);
-        
+
         log.info("Wiki Dialogue stopped!");
     }
 
