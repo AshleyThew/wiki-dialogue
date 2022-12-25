@@ -1,4 +1,4 @@
-package com.wikidialogue;
+package com.dialouge_extractor;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -6,10 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetID;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.input.KeyManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 
@@ -28,28 +26,28 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
-public class WikiDialoguePanel extends PluginPanel {
+public class DialogueExtractorPanel extends PluginPanel {
 
     private final WidgetInfo[] widgetInfos;
     private final JPanel overallPanel = new JPanel();
     private final JLabel uiLabel = new JLabel("Open a dialogue box.");
     private final JLabel serverLabel = new JLabel("Open the dialogue editor.");
     private final Client client;
-    private final WikiDialoguePlugin plugin;
+    private final DialogueExtractorPlugin plugin;
     private JButton[] buttons = new JButton[0];
     private Widget lastWidget;
     private String lastText = "";
     private boolean shiftPressed;
     private boolean ctrlPressed;
 
-    private WikiDialogueDialogueServer server;
+    private DialogueExtractorServer websocket;
 
     @Inject
-    public WikiDialoguePanel(Client client, WikiDialoguePlugin plugin) {
+    public DialogueExtractorPanel(Client client, DialogueExtractorPlugin plugin) {
         super();
         this.client = client;
         this.plugin = plugin;
-        this.server = WikiDialogueDialogueServer.getInstance();
+        this.websocket = DialogueExtractorServer.getInstance();
         this.widgetInfos = new WidgetInfo[]{WidgetInfo.DIALOG_NPC_TEXT, WidgetInfo.DIALOG_PLAYER_TEXT, WidgetInfo.DIALOG_OPTION_OPTIONS, WidgetInfo.DIALOG_SPRITE_TEXT};
 
         setBorder(new EmptyBorder(6, 6, 6, 6));
@@ -119,7 +117,7 @@ public class WikiDialoguePanel extends PluginPanel {
                         jsonObject.addProperty("title", title);
                         jsonObject.addProperty("dialogue", dialogue);
                         jsonObject.addProperty("link", ctrlPressed);
-                        server.send(jsonObject);
+                        websocket.send(jsonObject);
                     }
                 }
             });
@@ -171,7 +169,7 @@ public class WikiDialoguePanel extends PluginPanel {
                         jsonObject.addProperty("type", "option");
                         jsonObject.add("options", jsonArray);
                         jsonObject.addProperty("link", ctrlPressed);
-                        server.send(jsonObject);
+                        websocket.send(jsonObject);
                     }
                 }
             });
@@ -192,8 +190,8 @@ public class WikiDialoguePanel extends PluginPanel {
 
     @Subscribe
     public void onGameTick(GameTick tick) {
-        if(server.getConnections().size() > 0){
-            serverLabel.setText("Dialogue editors connected: " + server.getConnections().size());
+        if(websocket.getConnections().size() > 0){
+            serverLabel.setText("Dialogue editors connected: " + websocket.getConnections().size());
         }else{
             serverLabel.setText("Open the dialogue editor.");
         }

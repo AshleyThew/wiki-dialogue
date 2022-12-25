@@ -1,4 +1,4 @@
-# Wiki Dialogue
+# Dialogue Extractor
 
 Addon for runelite to extract text from NPC dialogues.
 

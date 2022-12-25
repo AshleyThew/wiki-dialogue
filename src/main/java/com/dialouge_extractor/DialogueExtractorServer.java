@@ -1,4 +1,4 @@
-package com.wikidialogue;
+package com.dialouge_extractor;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -9,22 +9,19 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 
-import javax.inject.Inject;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
-public class WikiDialogueDialogueServer extends WebSocketServer {
+public class DialogueExtractorServer extends WebSocketServer {
 
-    private static WikiDialogueDialogueServer instance = new WikiDialogueDialogueServer();
+    private static final DialogueExtractorServer instance = new DialogueExtractorServer();
 
-    public static WikiDialogueDialogueServer getInstance() {
+    public static DialogueExtractorServer getInstance() {
         return instance;
     }
     private static Gson gson;
 
-    public WikiDialogueDialogueServer() {
+    public DialogueExtractorServer() {
         super(new InetSocketAddress("localhost", 21902));
         gson = new GsonBuilder().create();
     }

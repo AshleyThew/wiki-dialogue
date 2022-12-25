@@ -1,10 +1,9 @@
-package com.wikidialogue;
+package com.dialouge_extractor;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.config.ConfigManager;
-import net.runelite.client.config.Keybind;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
@@ -23,7 +22,7 @@ import java.awt.image.BufferedImage;
 @PluginDescriptor(
         name = "Wiki Dialogue"
 )
-public class WikiDialoguePlugin extends Plugin {
+public class DialogueExtractorPlugin extends Plugin {
     @Inject
     private Client client;
     @Inject
@@ -32,10 +31,10 @@ public class WikiDialoguePlugin extends Plugin {
     private EventBus eventBus;
 
     @Inject
-    private WikiDialogueConfig config;
+    private DialogueExtractorConfig config;
 
     @Inject
-    private WikiDialoguePanel wikiDialoguePanel;
+    private DialogueExtractorPanel wikiDialoguePanel;
 
     @Inject
     private KeyManager keyManager;
@@ -56,7 +55,7 @@ public class WikiDialoguePlugin extends Plugin {
 
         clientToolbar.addNavigation(navButton);
         eventBus.register(wikiDialoguePanel);
-        WikiDialogueDialogueServer.getInstance().start();
+        DialogueExtractorServer.getInstance().start();
         keyManager.registerKeyListener(shiftListener);
         log.info("Wiki Dialogue started!");
     }
@@ -66,7 +65,7 @@ public class WikiDialoguePlugin extends Plugin {
         clientToolbar.removeNavigation(navButton);
         eventBus.unregister(wikiDialoguePanel);
         keyManager.unregisterKeyListener(shiftListener);
-
+        DialogueExtractorServer.getInstance().stop();
         log.info("Wiki Dialogue stopped!");
     }
 
@@ -74,13 +73,13 @@ public class WikiDialoguePlugin extends Plugin {
         return log;
     }
 
-    public WikiDialogueConfig getConfig() {
+    public DialogueExtractorConfig getConfig() {
         return config;
     }
 
     @Provides
-    WikiDialogueConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(WikiDialogueConfig.class);
+    DialogueExtractorConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(DialogueExtractorConfig.class);
     }
 
     private final KeyListener shiftListener = new KeyListener() {
