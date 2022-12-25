@@ -39,6 +39,9 @@ public class DialogueExtractorPlugin extends Plugin {
     @Inject
     private KeyManager keyManager;
 
+    @Inject
+    private DialogueExtractorServer websocket;
+
     private NavigationButton navButton;
 
     @Override
@@ -55,7 +58,7 @@ public class DialogueExtractorPlugin extends Plugin {
 
         clientToolbar.addNavigation(navButton);
         eventBus.register(wikiDialoguePanel);
-        DialogueExtractorServer.getInstance().start();
+        websocket.start();
         keyManager.registerKeyListener(shiftListener);
         log.info("Wiki Dialogue started!");
     }
@@ -65,7 +68,7 @@ public class DialogueExtractorPlugin extends Plugin {
         clientToolbar.removeNavigation(navButton);
         eventBus.unregister(wikiDialoguePanel);
         keyManager.unregisterKeyListener(shiftListener);
-        DialogueExtractorServer.getInstance().stop();
+        websocket.stop();
         log.info("Wiki Dialogue stopped!");
     }
 

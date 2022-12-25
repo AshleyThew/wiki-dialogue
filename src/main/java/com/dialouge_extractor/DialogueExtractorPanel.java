@@ -40,6 +40,7 @@ public class DialogueExtractorPanel extends PluginPanel {
     private boolean shiftPressed;
     private boolean ctrlPressed;
 
+    @Inject
     private DialogueExtractorServer websocket;
 
     @Inject
@@ -47,7 +48,6 @@ public class DialogueExtractorPanel extends PluginPanel {
         super();
         this.client = client;
         this.plugin = plugin;
-        this.websocket = DialogueExtractorServer.getInstance();
         this.widgetInfos = new WidgetInfo[]{WidgetInfo.DIALOG_NPC_TEXT, WidgetInfo.DIALOG_PLAYER_TEXT, WidgetInfo.DIALOG_OPTION_OPTIONS, WidgetInfo.DIALOG_SPRITE_TEXT};
 
         setBorder(new EmptyBorder(6, 6, 6, 6));

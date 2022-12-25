@@ -9,21 +9,20 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.net.InetSocketAddress;
 
 @Slf4j
+@Singleton
 public class DialogueExtractorServer extends WebSocketServer {
 
-    private static final DialogueExtractorServer instance = new DialogueExtractorServer();
+    private Gson gson;
 
-    public static DialogueExtractorServer getInstance() {
-        return instance;
-    }
-    private static Gson gson;
-
-    public DialogueExtractorServer() {
+    @Inject
+    public DialogueExtractorServer(Gson gson) {
         super(new InetSocketAddress("localhost", 21902));
-        gson = new GsonBuilder().create();
+        this.gson = gson;
     }
 
     @Override
