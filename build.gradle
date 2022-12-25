@@ -18,12 +18,14 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok:1.18.20'
 	annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
+	implementation group: 'org.java-websocket', name:'Java-WebSocket', version: '1.5.3'
+
 	testImplementation 'junit:junit:4.12'
 	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
 	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
 }
 
-group = 'com.dialogue_extractor'
+group = 'com.wikidialogue'
 version = '1.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
