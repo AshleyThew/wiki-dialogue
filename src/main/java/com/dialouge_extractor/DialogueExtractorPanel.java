@@ -21,15 +21,18 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
 public class DialogueExtractorPanel extends PluginPanel {
 
-    private final WidgetInfo[] widgetInfos;
-    private final JPanel overallPanel = new JPanel();
+    private final List<CustomWidgetInfo> messageInfos;
+    private final List<CustomWidgetInfo> optionsInfos;
+    private final List<CustomWidgetInfo> allInfos;
     private final JLabel uiLabel = new JLabel("Open a dialogue box.");
     private final JLabel serverLabel = new JLabel("Open the dialogue editor.");
     private final Client client;
@@ -46,9 +49,14 @@ public class DialogueExtractorPanel extends PluginPanel {
     @Inject
     public DialogueExtractorPanel(Client client, DialogueExtractorPlugin plugin) {
         super();
+        this.messageInfos = Arrays.asList(CustomWidgetInfo.DIALOG_NPC_TEXT, CustomWidgetInfo.DIALOG_PLAYER_TEXT, CustomWidgetInfo.DIALOG_SPRITE_TEXT, CustomWidgetInfo.DIALOG_SPRITE_DOUBLE_TEXT, CustomWidgetInfo.DIALOG_CHATBOX_MESSAGE);
+        this.optionsInfos = Arrays.asList(CustomWidgetInfo.DIALOG_OPTION_OPTIONS);
+        List<CustomWidgetInfo> allList = new ArrayList<>();
+        allList.addAll(messageInfos);
+        allList.addAll(optionsInfos);
+        this.allInfos = allList;
         this.client = client;
         this.plugin = plugin;
-        this.widgetInfos = new WidgetInfo[]{WidgetInfo.DIALOG_NPC_TEXT, WidgetInfo.DIALOG_PLAYER_TEXT, WidgetInfo.DIALOG_OPTION_OPTIONS, WidgetInfo.DIALOG_SPRITE_TEXT};
 
         setBorder(new EmptyBorder(6, 6, 6, 6));
         setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -82,48 +90,44 @@ public class DialogueExtractorPanel extends PluginPanel {
         }
     }
 
-    private void setupCopyNormal(Widget widget, WidgetInfo widgetInfo) {
+    private void setupCopyNormal(Widget widget, CustomWidgetInfo widgetInfo) {
         removeButtons();
         remove(uiLabel);
         try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-                public void run() {
-                    String title = "";
-                    switch (widgetInfo){
-                        case DIALOG_PLAYER_TEXT:
-                            title = "<player>";
-                            break;
-                        case DIALOG_NPC_TEXT:
-                            title = client.getWidget(WidgetInfo.DIALOG_NPC_NAME).getText();
-                            break;
-                    }
+            SwingUtilities.invokeAndWait(() -> {
+                String title = "";
+                switch (widgetInfo){
+                    case DIALOG_PLAYER_TEXT:
+                        title = "<player>";
+                        break;
+                    case DIALOG_NPC_TEXT:
+                        title = client.getWidget(WidgetInfo.DIALOG_NPC_NAME).getText();
+                        break;
+                }
 
-                    JButton copy = new JButton("Copy Dialogue");
-                    String dialogue = replace(widget.getText());
-                    copy.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mousePressed(MouseEvent mouseEvent) {
-                            StringSelection stringSelection = new StringSelection(dialogue);
-                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                            clipboard.setContents(stringSelection, null);
-                        }
-                    });
-                    add(copy);
-                    buttons = new JButton[]{copy};
-                    refresh();
-                    if(!shiftPressed) {
-                        JsonObject jsonObject = new JsonObject();
-                        jsonObject.addProperty("type", "dialogue");
-                        jsonObject.addProperty("title", title);
-                        jsonObject.addProperty("dialogue", dialogue);
-                        jsonObject.addProperty("link", ctrlPressed);
-                        websocket.send(jsonObject);
+                JButton copy = new JButton("Copy Dialogue");
+                String dialogue = replace(widget.getText());
+                copy.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent mouseEvent) {
+                        StringSelection stringSelection = new StringSelection(dialogue);
+                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                        clipboard.setContents(stringSelection, null);
                     }
+                });
+                add(copy);
+                buttons = new JButton[]{copy};
+                refresh();
+                if(!shiftPressed) {
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("type", "dialogue");
+                    jsonObject.addProperty("title", title);
+                    jsonObject.addProperty("dialogue", dialogue);
+                    jsonObject.addProperty("link", ctrlPressed);
+                    websocket.send(jsonObject);
                 }
             });
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
+        } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
@@ -137,55 +141,43 @@ public class DialogueExtractorPanel extends PluginPanel {
         removeButtons();
         remove(uiLabel);
         try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-                public void run() {
-                    Widget[] dialogueOptions = option.getChildren();
-                    String[] optionsText = new String[dialogueOptions.length];
-                    buttons = new JButton[dialogueOptions.length];
-                    JsonArray jsonArray = new JsonArray();
-                    for (int i = 0; i < dialogueOptions.length; i++) {
-                        String option = replace(dialogueOptions[i].getText());
-                        String info = i == 0 ? "Title" : "Option " + i;
-                        JButton copy = new JButton("Copy " + info);
-                        copy.addMouseListener(new MouseAdapter() {
-                            @Override
-                            public void mousePressed(MouseEvent mouseEvent) {
-                                StringSelection stringSelection = new StringSelection(option);
-                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                                clipboard.setContents(stringSelection, null);
-                            }
-                        });
-                        if (option.length() > 0) {
-                            add(copy);
-                            if(i != 0){
-                                jsonArray.add(option);
-                            }
+            SwingUtilities.invokeAndWait(() -> {
+                Widget[] dialogueOptions = option.getChildren();
+                String[] optionsText = new String[dialogueOptions.length];
+                buttons = new JButton[dialogueOptions.length];
+                JsonArray jsonArray = new JsonArray();
+                for (int i = 0; i < dialogueOptions.length; i++) {
+                    String option1 = replace(dialogueOptions[i].getText());
+                    String info = i == 0 ? "Title" : "Option " + i;
+                    JButton copy = new JButton("Copy " + info);
+                    copy.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mousePressed(MouseEvent mouseEvent) {
+                            StringSelection stringSelection = new StringSelection(option1);
+                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                            clipboard.setContents(stringSelection, null);
                         }
-                        buttons[i] = copy;
+                    });
+                    if (option1.length() > 0) {
+                        add(copy);
+                        if(i != 0){
+                            jsonArray.add(option1);
+                        }
                     }
-                    refresh();
-                    JsonObject jsonObject = new JsonObject();
-                    if(!shiftPressed) {
-                        jsonObject.addProperty("type", "option");
-                        jsonObject.add("options", jsonArray);
-                        jsonObject.addProperty("link", ctrlPressed);
-                        websocket.send(jsonObject);
-                    }
+                    buttons[i] = copy;
+                }
+                refresh();
+                JsonObject jsonObject = new JsonObject();
+                if(!shiftPressed) {
+                    jsonObject.addProperty("type", "option");
+                    jsonObject.add("options", jsonArray);
+                    jsonObject.addProperty("link", ctrlPressed);
+                    websocket.send(jsonObject);
                 }
             });
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
+        } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void copyText() {
-
-    }
-
-    private void copyOption(int option) {
-
     }
 
     @Subscribe
@@ -197,22 +189,17 @@ public class DialogueExtractorPanel extends PluginPanel {
         }
 
         Widget currentWidget = null;
-        WidgetInfo currentWidgetInfo = null;
+        CustomWidgetInfo currentWidgetInfo = null;
         String currentText = null;
 
-        for (WidgetInfo widgetInfo : widgetInfos) {
-            currentWidget = client.getWidget(widgetInfo);
+        for (CustomWidgetInfo widgetInfo : allInfos) {
+            currentWidget = client.getWidget(widgetInfo.groupId, widgetInfo.childId);
             if (currentWidget != null) {
                 currentWidgetInfo = widgetInfo;
-                switch (currentWidgetInfo) {
-                    case DIALOG_NPC_TEXT:
-                    case DIALOG_PLAYER_TEXT:
-                    case DIALOG_SPRITE_TEXT:
-                        currentText = currentWidget.getText();
-                        break;
-                    case DIALOG_OPTION_OPTIONS:
-                        currentText = Arrays.stream(currentWidget.getChildren()).map(Widget::getText).collect(Collectors.joining("\n"));
-                        break;
+                if(messageInfos.contains(currentWidgetInfo)){
+                    currentText = currentWidget.getText();
+                }else if(optionsInfos.contains(currentWidgetInfo)){
+                    currentText = Arrays.stream(currentWidget.getChildren()).map(Widget::getText).collect(Collectors.joining("\n"));
                 }
                 break;
             }
@@ -221,17 +208,10 @@ public class DialogueExtractorPanel extends PluginPanel {
             if (currentWidget != lastWidget || !lastText.equals(currentText)) {
                 lastWidget = currentWidget;
                 lastText = currentText;
-                Widget finalCurrentWidget = currentWidget;
-                switch (currentWidgetInfo) {
-                    case DIALOG_NPC_TEXT:
-                    case DIALOG_PLAYER_TEXT:
-                    case DIALOG_SPRITE_TEXT:
-
-                        setupCopyNormal(finalCurrentWidget, currentWidgetInfo);
-                        break;
-                    case DIALOG_OPTION_OPTIONS:
-                        setupCopyOption(finalCurrentWidget);
-                        break;
+                if(messageInfos.contains(currentWidgetInfo)){
+                    setupCopyNormal(currentWidget, currentWidgetInfo);
+                }else if(optionsInfos.contains(currentWidgetInfo)){
+                    setupCopyOption(currentWidget);
                 }
             }
         } else if (lastWidget != null) {

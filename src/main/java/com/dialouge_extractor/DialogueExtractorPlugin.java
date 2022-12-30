@@ -51,7 +51,7 @@ public class DialogueExtractorPlugin extends Plugin {
         final BufferedImage icon = ImageUtil.getResourceStreamFromClass(getClass(), "normal.png");
 
         navButton = NavigationButton.builder()
-                .tooltip("Wiki Dialogue")
+                .tooltip("Dialogue Extractor")
                 .icon(icon)
                 .panel(wikiDialoguePanel)
                 .build();
@@ -60,7 +60,7 @@ public class DialogueExtractorPlugin extends Plugin {
         eventBus.register(wikiDialoguePanel);
         websocket.start();
         keyManager.registerKeyListener(shiftListener);
-        log.info("Wiki Dialogue started!");
+        log.info("Dialogue Extractor started!");
     }
 
     @Override

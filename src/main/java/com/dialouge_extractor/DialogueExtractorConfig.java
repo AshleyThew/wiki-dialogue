@@ -27,11 +27,11 @@ public interface DialogueExtractorConfig extends Config {
     }
 
     @ConfigItem(
-            keyName = "websocketConnection",
-            name = "Websocket Connection",
-            description = "Websocket to send extracts to."
+            keyName = "websocketPort",
+            name = "Websocket Port",
+            description = "Websocket port to open."
     )
-    default String websocketConnection() {
-        return "ws://localhost:21902/";
+    default int websocketPort() {
+        return 21902;
     }
 }

@@ -20,8 +20,8 @@ public class DialogueExtractorServer extends WebSocketServer {
     private Gson gson;
 
     @Inject
-    public DialogueExtractorServer(Gson gson) {
-        super(new InetSocketAddress("localhost", 21902));
+    public DialogueExtractorServer(Gson gson, DialogueExtractorConfig config) {
+        super(new InetSocketAddress("localhost", config.websocketPort()));
         this.gson = gson;
     }
 
