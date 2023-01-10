@@ -20,7 +20,7 @@ import java.awt.image.BufferedImage;
 
 @Slf4j
 @PluginDescriptor(
-        name = "Wiki Dialogue"
+        name = "Dialogue Extractor"
 )
 public class DialogueExtractorPlugin extends Plugin {
     @Inject
@@ -34,7 +34,7 @@ public class DialogueExtractorPlugin extends Plugin {
     private DialogueExtractorConfig config;
 
     @Inject
-    private DialogueExtractorPanel wikiDialoguePanel;
+    private DialogueExtractorPanel dialogueExtractorPanel;
 
     @Inject
     private KeyManager keyManager;
@@ -53,11 +53,11 @@ public class DialogueExtractorPlugin extends Plugin {
         navButton = NavigationButton.builder()
                 .tooltip("Dialogue Extractor")
                 .icon(icon)
-                .panel(wikiDialoguePanel)
+                .panel(dialogueExtractorPanel)
                 .build();
 
         clientToolbar.addNavigation(navButton);
-        eventBus.register(wikiDialoguePanel);
+        eventBus.register(dialogueExtractorPanel);
         websocket.start();
         keyManager.registerKeyListener(shiftListener);
         log.info("Dialogue Extractor started!");
@@ -66,10 +66,10 @@ public class DialogueExtractorPlugin extends Plugin {
     @Override
     protected void shutDown() throws Exception {
         clientToolbar.removeNavigation(navButton);
-        eventBus.unregister(wikiDialoguePanel);
+        eventBus.unregister(dialogueExtractorPanel);
         keyManager.unregisterKeyListener(shiftListener);
         websocket.stop();
-        log.info("Wiki Dialogue stopped!");
+        log.info("Dialogue Extractor stopped!");
     }
 
     public Logger getLogger() {
@@ -93,20 +93,20 @@ public class DialogueExtractorPlugin extends Plugin {
         @Override
         public void keyPressed(KeyEvent e) {
             if (e.getExtendedKeyCode() == KeyEvent.VK_SHIFT) {
-                wikiDialoguePanel.setShiftPressed(true);
+                dialogueExtractorPanel.setShiftPressed(true);
             }
             if (e.getExtendedKeyCode() == KeyEvent.VK_CONTROL) {
-                wikiDialoguePanel.setCtrlPressed(true);
+                dialogueExtractorPanel.setCtrlPressed(true);
             }
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
             if (e.getExtendedKeyCode() == KeyEvent.VK_SHIFT) {
-                wikiDialoguePanel.setShiftPressed(false);
+                dialogueExtractorPanel.setShiftPressed(false);
             }
             if (e.getExtendedKeyCode() == KeyEvent.VK_CONTROL) {
-                wikiDialoguePanel.setCtrlPressed(false);
+                dialogueExtractorPanel.setCtrlPressed(false);
             }
         }
     };
