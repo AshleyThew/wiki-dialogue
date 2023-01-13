@@ -60,7 +60,7 @@ public class DialogueExtractorPlugin extends Plugin {
         eventBus.register(dialogueExtractorPanel);
         websocket.start();
         keyManager.registerKeyListener(shiftListener);
-        log.info("Dialogue Extractor started!");
+        log.debug("Dialogue Extractor started!");
     }
 
     @Override
@@ -69,7 +69,7 @@ public class DialogueExtractorPlugin extends Plugin {
         eventBus.unregister(dialogueExtractorPanel);
         keyManager.unregisterKeyListener(shiftListener);
         websocket.stop();
-        log.info("Dialogue Extractor stopped!");
+        log.debug("Dialogue Extractor stopped!");
     }
 
     public Logger getLogger() {

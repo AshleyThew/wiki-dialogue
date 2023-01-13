@@ -27,7 +27,7 @@ public class DialogueExtractorServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        log.info(conn.getRemoteSocketAddress().getAddress().getHostAddress() + " connected to websocket.");
+        log.debug(conn.getRemoteSocketAddress().getAddress().getHostAddress() + " connected to websocket.");
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("type", "join");
         jsonObject.addProperty("message", "Welcome.");
@@ -36,7 +36,7 @@ public class DialogueExtractorServer extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        log.info(conn.getRemoteSocketAddress().getAddress().getHostAddress() + " closed websocket.");
+        log.debug(conn.getRemoteSocketAddress().getAddress().getHostAddress() + " closed websocket.");
     }
 
     @Override
