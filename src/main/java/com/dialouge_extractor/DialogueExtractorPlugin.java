@@ -1,6 +1,8 @@
 package com.dialouge_extractor;
 
+import com.google.gson.Gson;
 import com.google.inject.Provides;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.config.ConfigManager;
@@ -40,14 +42,16 @@ public class DialogueExtractorPlugin extends Plugin {
     private KeyManager keyManager;
 
     @Inject
+    private Gson gson;
+
+
+    @Getter
     private DialogueExtractorServer websocket;
 
     private NavigationButton navButton;
 
     @Override
     protected void startUp() throws Exception {
-
-
         final BufferedImage icon = ImageUtil.getResourceStreamFromClass(getClass(), "normal.png");
 
         navButton = NavigationButton.builder()
@@ -58,6 +62,7 @@ public class DialogueExtractorPlugin extends Plugin {
 
         clientToolbar.addNavigation(navButton);
         eventBus.register(dialogueExtractorPanel);
+        websocket = new DialogueExtractorServer(gson, config);
         websocket.start();
         keyManager.registerKeyListener(shiftListener);
         log.debug("Dialogue Extractor started!");

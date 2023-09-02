@@ -43,8 +43,6 @@ public class DialogueExtractorPanel extends PluginPanel {
     private boolean shiftPressed;
     private boolean ctrlPressed;
 
-    @Inject
-    private DialogueExtractorServer websocket;
 
     @Inject
     public DialogueExtractorPanel(Client client, DialogueExtractorPlugin plugin) {
@@ -124,7 +122,7 @@ public class DialogueExtractorPanel extends PluginPanel {
                     jsonObject.addProperty("title", title);
                     jsonObject.addProperty("dialogue", dialogue);
                     jsonObject.addProperty("link", ctrlPressed);
-                    websocket.send(jsonObject);
+                    plugin.getWebsocket().send(jsonObject);
                 }
             });
         } catch (InterruptedException | InvocationTargetException e) {
@@ -172,7 +170,7 @@ public class DialogueExtractorPanel extends PluginPanel {
                     jsonObject.addProperty("type", "option");
                     jsonObject.add("options", jsonArray);
                     jsonObject.addProperty("link", ctrlPressed);
-                    websocket.send(jsonObject);
+                    plugin.getWebsocket().send(jsonObject);
                 }
             });
         } catch (InterruptedException | InvocationTargetException e) {
@@ -182,8 +180,8 @@ public class DialogueExtractorPanel extends PluginPanel {
 
     @Subscribe
     public void onGameTick(GameTick tick) {
-        if(websocket.getConnections().size() > 0){
-            serverLabel.setText("Dialogue editors connected: " + websocket.getConnections().size());
+        if(plugin.getWebsocket().getConnections().size() > 0){
+            serverLabel.setText("Dialogue editors connected: " + plugin.getWebsocket().getConnections().size());
         }else{
             serverLabel.setText("Open the dialogue editor.");
         }
